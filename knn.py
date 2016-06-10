@@ -98,6 +98,27 @@ plt.xlabel('x1')
 plt.ylabel('x2')
 plt.title('Scatterplot Example')
 
+# Time Series Plot by Group
+
+aapl = quandl.get('WIKI/AAPL')
+aapl['Stock'] = 'Apple'
+aapl['Date'] = aapl.index
+aa = quandl.get('WIKI/AA')
+aa['Stock'] = 'Alcoa'
+aa['Date'] = aa.index
+df = aapl[['Date','Open','Stock']].append(aa[['Date','Open','Stock']])
+
+colors = itertools.cycle(['r','b'])
+groups = df.groupby('Stock')
+for name, group in groups:
+	plt.plot(group.Date, group.Open,
+	color = next(colors), label = name)
+plt.legend()
+plt.xlabel('Date')
+plt.ylabel('Stock Price')
+plt.title('Apple and Alcoa Stock Prices Over Time')
+
+
 # KNN
 from sklearn.neighbors import KNeighborsClassifier
 
