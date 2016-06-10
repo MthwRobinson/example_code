@@ -1,3 +1,5 @@
+import itertools
+
 import numpy as np 
 
 import pandas as pd
@@ -74,10 +76,10 @@ res = lm.resid
 fig = sma.qqplot(resid)
 plt.show()
 
-# KNN
+# Plotting by Group
 
 file = "http://www2.isye.gatech.edu/~ymei/7406/Handouts/mixtureexample.csv"
-df = pd.read_csv(file, header = True)
+df = pd.read_csv(file, header = False)
 rows = [0,1,2,197,198,199]
 df.ix[rows]
 
@@ -85,3 +87,43 @@ data = np.matrix(df)
 x1 = data[:,0]
 x2 = data[:,1]
 y = data[:,2]
+
+colors = itertools.cycle(['r','b'])
+groups = df.groupby('y')
+for name, group in groups:
+	plt.scatter(group.x1,group.x2,
+		color = next(colors), label = name)
+plt.legend()
+plt.xlabel('x1')
+plt.ylabel('x2')
+plt.title('Scatterplot Example')
+
+# KNN
+from sklearn.neighbors import KNeighborsClassifier
+
+px1 = np.arange(-2.6,4.3,0.1)
+px1 = px1.reshape(len(px1),1)
+px2 = np.arange(-2,2.95,0.05)
+px2 = px2.reshape(len(px2),1)
+px2new = np.array([px2[0] for j in range(len(px1))])
+px2new = px2new.reshape(len(px2new),1)
+xnew1 = np.hstack((px1,px2new))
+for i in range(1,len(px2)):
+	px2new = np.array([px2[i] for j in range(len(px1))])
+	px2new = px2new.reshape(len(px2new),1)
+	xnew1 = np.vstack((xnew1, np.hstack((px1,px2new))))
+
+X = np.hstack((x1,x2))
+neigh = KNeighborsClassifier(n_neighbors = 15)
+neigh.fit(X, ravel(y))
+pred = neigh.predict(xnew1)
+pred_prob = neigh.predict_proba(xnew1)
+
+x1cont = []; x2cont = []
+prob_list = list(pred_prob[:,0])
+for i in range(len(prob_list)):
+	val = prob_list[i]
+	if val > 0.45 and val < 0.55:
+		x1cont.append(xnew1[i][0])
+		x2cont.append(xnew1[i][1])
+plt.plot(x1cont,x2cont)
